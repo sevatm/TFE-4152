@@ -110,42 +110,38 @@ Cd1 N1_R1C1 VDD 30f                           ! Photo diode capacitor
 .param NRE_R2_DLY = {4*CLK_PERIOD + EXPOSURETIME} ! Delay for NRE_R2 signal
 .param ERASE_DLY = {6*CLK_PERIOD + EXPOSURETIME} ! Delay for ERASE signal
 
-.param minW 1.08u
-.param maxW 5.04u
-.param maxL 1.08u
-.param minL 0.36u
+.param minW=1.08u
+.param maxW=5.04u
+.param maxL=1.08u
+.param minL=0.36u
 
-.param M1W minW
-.param M1L maxL
-.param M2W minW
-.param M2L maxL
-.param M3W maxW
-.param M3L minL
-.param M4W minW
-.param M4L maxL
+.param MswitchW=minW
+.param MswitchL=maxL
+.param MbufferW=maxW
+.param MbufferL=minL
 
-.param MCW minW
-.param MCL maxL
-.param CC_value 3p
+.param MactiveLoadW=minW
+.param MactiveLoadL=maxL
+.param CC_value=3p
 
-.param CS_value 2p
+.param CS_value=2p
 
 .subckt pixel VDD VSS EXPOSE ERASE NRE OUT N2
 xPhotoDiode VDD 1 PhotoDiode
 * How to make NMOS: MX drain gate source bulk NMOS W= L=
-M1 1 EXPOSE N2 VSS NMOS W=M1W L=M1L
-M2 N2 ERASE VSS VSS NMOS W=M2W L=M2L
+M1 1 EXPOSE N2 VSS NMOS W=MswitchW L=MswitchL
+M2 N2 ERASE VSS VSS NMOS W=MswitchW L=MswitchL
 
 * How to make capacitor: CX node1 node2 value
 CS N2 VSS CS_value
 
 * How to make PMOS: MX source gate drain bulk PMOS W= L=
-M3 3 N2 VSS VDD PMOS W=M3W L=M3L
-M4 OUT NRE 3 VDD PMOS W=M4W L=M3L
+M3 3 N2 VSS VDD PMOS W=MbufferW L=MbufferL
+M4 OUT NRE 3 VDD PMOS W=MswitchW L=MswitchL
 .ends
 
 .subckt load VDD VSS OUT
-MC VDD OUT OUT VDD PMOS W=MCW L=MCL
+MC VDD OUT OUT VDD PMOS W=MactiveLoadW L=MactiveLoadL
 CC OUT VSS CC_value
 .ends
 
@@ -168,9 +164,9 @@ vNRE1 4 0 dc 0 pulse(VDD 0 NRE_R1_DLY TRF TRF CLK_PERIOD PERIOD)
 vNRE2 5 0 dc 0 pulse(VDD 0 NRE_R2_DLY TRF TRF CLK_PERIOD PERIOD)
 
 * How to make transient analysis: .TRAN TSTEP TSTOP
-*.plot TRAN V(6)
-*.plot TRAN V(7)
-*.plot TRAN V(2) V(3)
+.plot TRAN V(6)
+.plot TRAN V(7)
+.plot TRAN V(2) V(3)
 .plot TRAN V(4) V(5)
 .plot TRAN V(Pixel11.N2)
 
