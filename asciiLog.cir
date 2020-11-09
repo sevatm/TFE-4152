@@ -84,19 +84,7 @@
 + PKETA	=	-6.41E-03	KF	=	1.29E-29	PETA0	=	7.31E-05
 
 
-
-
-* Photodiode circuit
 .param Ipd_1 = 50p
-
-.subckt PhotoDiode  VDD N1_R1C1 
-I1_R1C1  VDD   N1_R1C1   DC  Ipd_1            ! Photo current source
-d1 N1_R1C1 VDD dwell 1                        ! Reverse biased Diode
-.model dwell d cj0=1e-14 is=1e-12 m=0.5 bv=40 ! Diode model
-Cd1 N1_R1C1 VDD 30f                           ! Photo diode capacitor
-.ends
-
-
 .param VDD = 1.8 ! Supply voltage
 .param EXPOSURETIME = 30m ! Exposure time, range [2 ms, 30 ms]
 
@@ -122,40 +110,43 @@ Cd1 N1_R1C1 VDD 30f                           ! Photo diode capacitor
 
 .param MactiveLoadW=minW
 .param MactiveLoadL=maxL
-.param CC_value=3p
+.param CC_cap=3p
 
-.param CS_value=2p
+.param CS_cap=2p
+
+.subckt PhotoDiode  VDD N1_R1C1 
+I1_R1C1  VDD   N1_R1C1   DC  Ipd_1            ! Photo current source
+d1 N1_R1C1 VDD dwell 1                        ! Reverse biased Diode
+.model dwell d cj0=1e-14 is=1e-12 m=0.5 bv=40 ! Diode model
+Cd1 N1_R1C1 VDD 30f                           ! Photo diode capacitor
+.ends
 
 .subckt pixel VDD VSS EXPOSE ERASE NRE OUT N2
 xPhotoDiode VDD 1 PhotoDiode
-* How to make NMOS: MX drain gate source bulk NMOS W= L=
+
 M1 1 EXPOSE N2 VSS NMOS W=MswitchW L=MswitchL
 M2 N2 ERASE VSS VSS NMOS W=MswitchW L=MswitchL
 
-* How to make capacitor: CX node1 node2 value
-CS N2 VSS CS_value
+CS N2 VSS CS_cap
 
-* How to make PMOS: MX source gate drain bulk PMOS W= L=
 M3 3 N2 VSS VDD PMOS W=MbufferW L=MbufferL
 M4 OUT NRE 3 VDD PMOS W=MswitchW L=MswitchL
 .ends
 
 .subckt load VDD VSS OUT
 MC VDD OUT OUT VDD PMOS W=MactiveLoadW L=MactiveLoadL
-CC OUT VSS CC_value
+CC OUT VSS CC_cap
 .ends
 
-xPixel11 1 0 2 3 4 6  8 pixel
-xPixel12 1 0 2 3 4 7  9 pixel
-xPixel21 1 0 2 3 5 6 10 pixel
-xPixel22 1 0 2 3 5 7 11 pixel
+xPixel_11 1 0 2 3 4 6  8 pixel
+xPixel_12 1 0 2 3 4 7  9 pixel
+xPixel_21 1 0 2 3 5 6 10 pixel
+xPixel_22 1 0 2 3 5 7 11 pixel
 
 xLoad1 1 0 6 load
 xLoad2 1 0 7 load
 
 VDD 1 0 dc VDD
-* How to make pulse: Vname N1 N2 PULSE(V1 V2 TD Tr Tf PW Period)
-* V1 - initial voltage; V2 - peak voltage; TD - initial delay time; Tr - rise time; Tf - fall time; pwf - pulse-wise; and Period - period.
 
 vEXPOSE 2 0 dc 0 pulse(0v VDD EXPOSE_DLY TRF TRF EXPOSURETIME PERIOD)
 vERASE  3 0 dc 0 pulse(0v VDD ERASE_DLY TRF TRF CLK_PERIOD PERIOD)
@@ -163,11 +154,10 @@ vERASE  3 0 dc 0 pulse(0v VDD ERASE_DLY TRF TRF CLK_PERIOD PERIOD)
 vNRE1 4 0 dc 0 pulse(VDD 0 NRE_R1_DLY TRF TRF CLK_PERIOD PERIOD)
 vNRE2 5 0 dc 0 pulse(VDD 0 NRE_R2_DLY TRF TRF CLK_PERIOD PERIOD)
 
-* How to make transient analysis: .TRAN TSTEP TSTOP
-.plot TRAN V(6)
-.plot TRAN V(7)
-.plot TRAN V(2) V(3)
-.plot TRAN V(4) V(5)
-.plot TRAN V(Pixel11.N2)
+*.plot TRAN V(6)
+*.plot TRAN V(7)
+.plot TRAN V(2) V(3) V(4) V(5) V(6) V(8)
+*.plot TRAN V(4) V(5)
+*.plot TRAN V(8)
 
-.tran 100n 60m
+.tran 20n 20m
