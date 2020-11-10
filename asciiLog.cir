@@ -1,5 +1,4 @@
-* Pixel subcircuit
- 
+*Four pixel digital camera
 
 .param proc_delta = 1.0
 .param vt_shift = 0.0
